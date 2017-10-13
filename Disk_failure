@@ -1,0 +1,71 @@
+
+
+We had a issue in El_Salvador, Cloudera Manager reporting Datanode Volume failure.
+ 
+Error:
+ 
+We have seen Datanode Volume failure issue on Cloudera Manager and found out the following error from /var/log/cloudera-scm-agent log.
+ 
+[25/Sep/2017 14:46:14 +0000] 9316 MainThread agent        ERROR    Could not evaluate resource {u'io': None, u'named_cpu': None, u'tcp_listen': None, u'dynamic': True, u'rlimits': None, u'file': None, u'memory': None, u'directory': {u'path': u'/grid/5/dfs/dn', u'bytes_free_warning_threshhold_bytes': 0, u'group': u'hadoop', u'user': u'hdfs', u'mode': 448}, u'cpu': None, u'contents': None}
+Traceback (most recent call last):
+  File "/usr/lib64/cmf/agent/build/env/lib/python2.6/site-packages/cmf-5.8.4-py2.6.egg/cmf/agent.py", line 3604, in evaluate_resources
+    self.agent.mkabsdir(path=d["path"], user=d["user"], group=d["group"], mode=d["mode"])
+  File "/usr/lib64/cmf/agent/build/env/lib/python2.6/site-packages/cmf-5.8.4-py2.6.egg/cmf/agent.py", line 1957, in mkabsdir
+    os.makedirs(path)
+  File "/usr/lib64/python2.6/os.py", line 150, in makedirs
+    makedirs(head, mode)
+  File "/usr/lib64/python2.6/os.py", line 157, in makedirs
+    mkdir(name, mode)
+OSError: [Errno 30] Read-only file system: '/grid/5/dfs'
+ 
+When I go into the below location it throws me the following error, looks like it is related to Hardware (disk) failure. I would like you to look if the disk related to /grid/5 volume is fine or not.
+ 
+[root@cm-pr-bgd-s01 5]# ll
+ls: reading directory .: Input/output error
+total 0
+[root@cm-pr-bgd-s01 5]# pwd
+/grid/5
+[root@cm-pr-bgd-s01 5]# date
+Mon Sep 25 14:48:56 CST 2017
+ 
+Resolution:
+ 
+We are working with the Client Infrastructure team to fix the Disk and take it from there and see if it resolved or not.
+
+Steps followed for Performing Disk Hot Swap for DataNodes Using Cloudera Manager
+
+Minimum Required Role: Cluster Administrator (also provided by Full Administrator)
+1.	Configure data directories to remove the disk you are swapping out:
+a.	Go to the HDFS service.
+b.	Click the Instances tab.
+c.	Click the affected DataNode.
+d.	Click the Configuration tab.
+e.	Select Scope > DataNode.
+f.	Select Category > Main.
+g.	Change the value of the DataNode Data Directory property to remove the directories that are mount points for the disk you are removing.Warning: Change the value of this property only for the specific DataNode instance where you are planning to hot swap the disk. Do not edit the role group value for this property. Doing so will cause data loss.
+2.	Click Save Changes to commit the changes.
+3.	Refresh the affected DataNode. Select Actions > Refresh Data Directories.
+4.	Remove the old disk and add the replacement disk.
+5.	Change the value of the DataNode Data Directory property to add back the directories that are mount points for the disk you added.
+6.	Click Save Changes to commit the changes.
+7.	Refresh the affected DataNode. Select Actions > Refresh Data Directories.
+8.	Run the HDFS fsck utility to validate the health of HDFS.
+
+How to Replace the Disk
+
+Reference :
+As this disk is of 4T , you would have to use parted to perform the formatting . Please see the below :
+
+Since fdisk cannot partition disks 2TB and higher , use “parted” command to partition the 4TB disks, below are the instructions :
+·      On a new drive :
+o   “parted /dev/<disk-name> mklabel gpt” { eg . parted /dev/sda mklabel gpt }
+·      Partition the complete disk as 1 single partition :
+o   “parted –a opt /dev/<disk-name> mkpart primary ext4 0% 100%”
+·      Verify if the partition got created using :
+o   “lsblk”
+·      Format the partition using ext4 fs :
+o   “mkfs.ext4 /dev/<partition-name>” { make sure to use partition name, usually a partition has a number to the end of disk name eg. /dev/sda1}
+·      Verify if the format went fine using :
+o   lsblk --fs command . It should show file-system format next to partition. 
+
+
