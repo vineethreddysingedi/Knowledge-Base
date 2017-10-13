@@ -68,4 +68,8 @@ o   “mkfs.ext4 /dev/<partition-name>” { make sure to use partition name, 
 ·      Verify if the format went fine using :
 o   lsblk --fs command . It should show file-system format next to partition. 
 
+References:
+
+https://www.cloudera.com/documentation/enterprise/5-8-x/topics/admin_dn_swap.html
+
 
