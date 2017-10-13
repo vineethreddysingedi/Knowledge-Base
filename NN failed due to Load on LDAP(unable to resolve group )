@@ -1,10 +1,10 @@
 
 
-Working on an AIG PROD issue , where jobs ran really slow today . Ticket 4819.
+Working on an PROD issue , where jobs ran really slow today . Ticket 4819.
 
 This morning around 5:00 AM the active namenode refused connection from ZKFC( zookeeper failover controller) . This resulted in namenode eventually dying. 
 
-Couple of batches that got triggered this morning ran for 4:00 + hrs . AIG needs to know what is the RCA and any fix to avoid this .
+Couple of batches that got triggered this morning ran for 4:00 + hrs  needs to know what is the RCA and any fix to avoid this .
 
 Below is what I have observed :
  Early morning ZKFC shows its not able to connect to nn1
