@@ -1,0 +1,23 @@
+Vinith Singedi [9:08 AM] 
+#Aws env where VPC is connected to VPN this script is used for ip/hostname resolution
+#Adding instances to DNS of a client on 
+
+#Below is the script which register the subnet that is created under VPC 
+#!/bin/bash
+#set -x
+#Updating hostname ip resolution into the DNS
+
+#ADD all IP range into the DNS entry
+max=252
+DOMAIN=alxn.net
+HOSTNAME='ip-10-196-14'
+LOCIP='10.196.14'
+for (( i=250; i <= $max; ++i ))
+do
+cat<<EOF | /usr/bin/nsupdate -v
+server ct05s-dc01.$DOMAIN
+update add $HOSTNAME-$i.$DOMAIN 60 A $LOCIP.$i
+send
+EOF
+echo "completed for IP $HOSTNAME-$i.$DOMAIN"
+done
