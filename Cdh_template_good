@@ -1,0 +1,119 @@
+curl -u admin_username:admin_user_password "http://10.11.13.199:7180/api/v12/clusters/zaloni/export" >/root/temaplate1.json?exportAutoConfig=true
+
+
+curl -X POST -H "Content-Type: application/json" -d @/root/cloudera_template.json http://admin:admin@10.11.13.7:7180/api/v12/cm/importClusterTemplate
+
+	{
+	"cdhVersion": "5.12.1",
+	"displayName": "zaloni",
+	"cmVersion": "5.12.1",
+	"repositories": ["https://archive.cloudera.com/cdh5/parcels/{latest_supported}/", "https://archive.cloudera.com/cdh4/parcels/latest/", "https://archive.cloudera.com/impala/parcels/latest/", "https://archive.cloudera.com/search/parcels/latest/", "https://archive.cloudera.com/accumulo/parcels/1.4/", "https://archive.cloudera.com/accumulo-c5/parcels/latest/", "https://archive.cloudera.com/kafka/parcels/latest/", "http://archive.cloudera.com/kudu/parcels/latest/", "https://archive.cloudera.com/spark/parcels/latest/", "https://archive.cloudera.com/sqoop-connectors/parcels/latest/"],
+	"products": [{
+		"version": "5.12.1-1.cdh5.12.1.p0.3",
+		"product": "CDH"
+	}],
+	"services": [{
+		"refName": "zookeeper",
+		"serviceType": "ZOOKEEPER",
+		"roleConfigGroups": [{
+			"refName": "zookeeper-SERVER-BASE",
+			"roleType": "SERVER",
+			"base": true
+		}]
+	}, {
+		"refName": "yarn",
+		"serviceType": "YARN",
+		"roleConfigGroups": [{
+			"refName": "yarn-RESOURCEMANAGER-BASE",
+			"roleType": "RESOURCEMANAGER",
+			"base": true
+		}, {
+			"refName": "yarn-NODEMANAGER-BASE",
+			"roleType": "NODEMANAGER",
+			"base": true
+		}, {
+			"refName": "yarn-JOBHISTORY-BASE",
+			"roleType": "JOBHISTORY",
+			"base": true
+		}]
+	}, {
+		"refName": "hdfs",
+		"serviceType": "HDFS",
+		"serviceConfigs": [{
+			"name": "dfs_encrypt_data_transfer_algorithm",
+			"value": "AES/CTR/NoPadding"
+		}, {
+			"name": "extra_auth_to_local_rules",
+			"value": "RULE:[1:$1@$0](.*@TESTAD.COM)s/@.*//"
+		}],
+		"roleConfigGroups": [{
+			"refName": "hdfs-NAMENODE-BASE",
+			"roleType": "NAMENODE",
+			"base": true
+		}, {
+			"refName": "hdfs-SECONDARYNAMENODE-BASE",
+			"roleType": "SECONDARYNAMENODE",
+			"base": true
+		}, {
+			"refName": "hdfs-DATANODE-BASE",
+			"roleType": "DATANODE",
+			"configs": [{
+				"name": "dfs_datanode_data_dir_perm",
+				"value": "755"
+			}],
+			"base": true
+		}, {
+				"refName": "hdfs-BALANCER-BASE",
+			"roleType": "BALANCER",
+			"base": true
+		}]
+	}, {
+		"refName": "hive",
+		"serviceType": "HIVE",
+		"serviceConfigs": [{
+			"name": "mapreduce_yarn_service",
+			"ref": "yarn"
+		}, {
+			"name": "hive_metastore_database_password",
+			"variable": "hive-hive_metastore_database_password"
+		}, {
+			"name": "zookeeper_service",
+			"ref": "zookeeper"
+		}, {
+			"name": "hive_metastore_database_name",
+			"variable": "hive-hive_metastore_database_name"
+		}],
+		"roleConfigGroups": [{
+			"refName": "hive-GATEWAY-BASE",
+			"roleType": "GATEWAY",
+			"base": true
+		}, {
+			"refName": "hive-HIVESERVER2-BASE",
+			"roleType": "HIVESERVER2",
+			"base": true
+		}, {
+			"refName": "hive-HIVEMETASTORE-BASE",
+			"roleType": "HIVEMETASTORE",
+			"base": true
+		}]
+	}],
+	"hostTemplates": [{
+		"refName": "HostTemplate-0-from-cdh-poc1.zalonilabs.com",
+		"cardinality": 1,
+		"roleConfigGroupsRefNames": ["hdfs-BALANCER-BASE", "hdfs-DATANODE-BASE", "hdfs-NAMENODE-BASE", "hdfs-SECONDARYNAMENODE-BASE", "hive-GATEWAY-BASE", "hive-HIVEMETASTORE-BASE", "hive-HIVESERVER2-BASE", "yarn-JOBHISTORY-BASE", "yarn-NODEMANAGER-BASE", "yarn-RESOURCEMANAGER-BASE", "zookeeper-SERVER-BASE"]
+	}],
+	"instantiator": {
+		"clusterName": "myCluster",
+		"hosts": [{
+			"hostName": "cdh-poc2.zalonilabs.com",
+			"hostTemplateRefName": "HostTemplate-0-from-cdh-poc1.zalonilabs.com"
+		}],
+		"variables": [{
+			"name": "hive-hive_metastore_database_name",
+			"value": "hive"
+		}, {
+			"name": "hive-hive_metastore_database_password",
+			"value": "hive"
+		}]
+	}
+}
