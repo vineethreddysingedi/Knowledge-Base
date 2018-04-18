@@ -1,0 +1,68 @@
+Below steps are done to enable TLS/SSL encryption in Hive server-
+
+
+1. Generate a JKS
+keytool -genkey -keyalg RSA -alias bedrock -keystore /etc/hadoop/certs/bedrock-keystore.jks -storepass <your_store_password> -validity 360 -keysize 2048 -ext san=dns:hdpqa-e1.zalonilabs.com
+2. Generate CSR from above keystore
+keytool -certreq -alias bedrock -keyalg RSA -file /etc/hadoop/certs/hdpqa-e1.zalonilabs.com.csr -keystore /etc/hadoop/certs/bedrock-keystore.jks -storepass <your_store_password> -ext san=dns:hdpqa-e1.zalonilabs.com
+3. Now get the signed cert from CA - file name is /etc/hadoop/certs/hdpqa-e1.zalonilabs.com.cer
+4. Import the root cert to JKS first. (Ignore if it already present)
+keytool -import -alias root -file /etc/hadoop/certs/RootCA.crt -keystore /etc/hadoop/certs/bedrock-keystore.jks
+Note: here RootCA.crt is root cert
+5. Repeat step4 for intermediate cert if there is any.
+6. Import signed cert into JKS
+keytool -import -alias bedrock -file /etc/hadoop/certs/hdpqa-e1.zalonilabs.com.cer -keystore /etc/hadoop/certs/bedrock-keystore.jks -storepass <your_store_password>
+
+Below configuration changes are to be done in Cloudera Manager Admin Console -
+
+1. Open the Cloudera Manager Admin Console and go to the Hive service.
+2. Click the Configuration tab.
+3. Select Scope > Hive (Service-Wide).
+4. Select Category > Security.
+5. In the Search field, type TLS/SSL to show the Hive properties.
+6. Edit the following properties according to your cluster configuration.
+a) Enable TLS/SSL for HiveServer2 - Check this box
+b) HiveServer2 TLS/SSL Server JKS Keystore File Location - Path to the TLS keystore.
+c) HiveServer2 TLS/SSL Server JKS Keystore File Password - Password for the TLS keystore.
+7. Click Save Changes to commit the changes.
+8. Restart the Hive service.
+
+ 
+
+Reconfirm the below properties in hive-site.xml
+
+ 
+
+<property>
+<name>hive.server2.use.SSL</name>
+<value>true</value>
+<description>enable/disable SSL </description>
+</property>
+<property>
+<name>hive.server2.keystore.path</name>
+<value>keystore-file-path</value>
+<description>path to keystore file</description>
+</property>
+
+<property>
+<name>hive.server2.keystore.password</name>
+<value>keystore-file-password</value>
+<description>keystore password</description>
+</property>
+
+ 
+
+Once the above steps are complete, the jdbc beeline URL should be as below-
+
+ 
+
+jdbc:hive2://localhost:10000/default;ssl=true;\
+sslTrustStore=/home/usr1/ssl/trust_store.jks;trustStorePassword=xyz
+
+ 
+
+The above is sample and needs to be as per the environment configured.
+
+ 
+
+This is checked with Cloudera version 5.10
