@@ -1,0 +1,98 @@
+Hello Team,
+
+ 
+Anaconda update on all the Salve nodes on Hadoop cluster has been done.
+ 
+using the following steps
+ 
+source /opt/anaconda/anaconda3-4.3.0/bin/activate spark210python3
+
+Python - enter
+
+Import numpy
+
+numpy.version.version
+
+quit()
+
+conda update numpy
+
+Also verify the update
+
+ 
+ 
+
+(spark210python3) [root@srvbd-data1 opt]# python
+
+Python 3.6.1 |Anaconda custom (64-bit)| (default, May 11 2017, 13:09:58)
+
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux
+
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> import numpy
+
+n>>> numpy.version.version
+
+'1.13.1'
+
+ 
+
+(spark210python3) [root@srvbd-data2 ~]# python
+
+Python 3.6.1 |Anaconda custom (64-bit)| (default, May 11 2017, 13:09:58)
+
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux
+
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> numpy.version.version
+
+Traceback (most recent call last):
+
+  File "<stdin>", line 1, in <module>
+
+NameError: name 'numpy' is not defined
+
+>>> import numpy
+
+>>> numpy.version.version
+
+'1.13.1'
+
+>>>
+
+ 
+
+(spark210python3) [root@srvbd-data3 ~]# python
+
+Python 3.6.1 |Anaconda custom (64-bit)| (default, May 11 2017, 13:09:58)
+
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux
+
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> import numpy
+
+nmy>>> numpy.version.version
+
+'1.13.1'
+
+>>>
+
+ 
+
+(spark210python3) [root@srvbd-data4 ~]# python
+
+Python 3.6.1 |Anaconda custom (64-bit)| (default, May 11 2017, 13:09:58)
+
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)] on linux
+
+Type "help", "copyright", "credits" or "license" for more information.
+
+>>> import numpy
+
+>>> numpy.version.version
+
+'1.13.1'
+
