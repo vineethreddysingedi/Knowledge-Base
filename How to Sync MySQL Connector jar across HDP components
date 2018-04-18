@@ -1,0 +1,79 @@
+MySQL Download Archive: 
+https://downloads.mysql.com/archives/c-j/
+Helpful command to track down all mysql-connector binaries on cluster node (and run md5sum to confirm version) 
+find / -xdev -type f -name "mysql-connector*jar" | xargs md5sum
+
+
+This article uses mysql-connector-java-5.1.35-bin.jar as example. Version later works as well.
+
+ 
+
+1. The best solution is to house the primary mysql-connector jar file (mysql-connector-java-5.1.35-bin.jar) in: 
+/usr/share/java
+
+ 
+
+2. Create a symlink in that directory called point to the 5.1.35 binary:
+
+
+mysql-connector-java.jar -> /usr/share/java/mysql-connector-java-5.1.35-bin.jar
+
+ 
+
+3. Stop all related HDP services that will be using the new mysql-connector jar via Ambari.
+
+ 
+
+4. Create symlinks (or copy the binary) over to all the locations above, making sure the name is exactly: 
+mysql-connector-java.jar
+
+ 
+
+5. Start the HDP components affected by the change via Ambari
+
+ 
+
+6. Stop the Ambari-agent
+
+
+service ambari-agent stop
+
+ 
+
+7. Cleanup Ambari-agent cache directories of any leftover mysql*jar files 
+/var/lib/ambari-agent/tmp 
+/var/lib/ambari-agent/cache
+
+ 
+
+8. Run the following Ambari-server command to update the mysql-connector jar:
+
+ambari-server setup --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+
+ 
+
+9. Restart ambari-server and start back up the ambari-agent 
+service ambari-server restart 
+service ambari-agent start
+
+ 
+
+8. Recheck the mysql-connector md5sums:
+
+
+find / -xdev -type f -name "mysql-connector*jar" -o -name "mysql-jdbc*.jar" | xargs md5sum 
+find / -xdev -type l -name "mysql-connector*jar" -o -name "mysql-jdbc*.jar" | xargs md5sum
+
+ 
+
+Confirm the connector used by each component:
+
+
+Sample (Hive Metastore and Hiveserver2)
+lsof -p $(cat /var/run/hive/hive-server.pid) | grep mysql 
+lsof -p $(cat /var/run/hive/hive.pid) | grep mysql
+
+ 
+
+Side note: Ambari creates a differently named symlink 'mysql-jdbc-driver.jar' instead of mysql-connector-java.jar in /var/lib/amari-server/resources. Please do not modify this filename.
+
