@@ -1,0 +1,216 @@
+=============Configuring kafka with kerberos==============
+
+ 
+
+Here are steps for a working Kafka on Kerberized HDP cluster:
+
+ 
+
+1.Add kafka services from Ambari.
+
+ 
+
+2.Select Kafka-broker hosts :
+
+ 
+
+3.Customized Kafka broker properties and Add following additional properties:
+
+ 
+
+principal.to.local.class=kafka.security.auth.KerberosPrincipalToLocal
+
+sasl.enabled.mechanisms=GSSAPI
+
+sasl.mechanism.inter.broker.protocol=GSSAPI
+
+security.inter.broker.protocol=SASL_PLAINTEXT
+
+security.protocol=SASL_PLAINTEXT
+
+super.users=kafka
+
+ 
+
+
+
+ 
+
+ 
+
+By default, if a resource has no associated ACLs, no one other than super users is allowed to access the resource. If you want to change that behavior, you can include the following in server.properties:
+
+allow.everyone.if.no.acl.found=true
+
+ 
+
+4.Change Listener as shown below:
+
+SASL_PLAINTEXT://localhost:6667
+
+ 
+
+
+
+ 
+
+5.Complete the installation.
+
+ 
+
+6.Verify Installation:
+
+ 
+
+Make sure that following properties are added into producer.properties and consumer.properties file: (if not add manually)
+
+sasl.mechanism=GSSAPI
+
+security.protocol=SASL_PLAINTEXT
+
+ 
+
+Get Kerberos TGT:
+
+ 
+
+[kafka@hive-spike ~]$ kinit -kt /etc/security/keytabs/kafka.service.keytab kafka/hive-spike.zalonilabs.com@ZALONILABS.COM
+
+ 
+
+Create a topic:
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --zookeeper hive-spike.zalonilabs.com:2181 --create --topic testtopic --partitions 2 --replication-factor 1
+
+ 
+
+Start producer console:
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-console-producer.sh --broker-list hive-spike.zalonilabs.com:6667 --topic testtopic --security-protocol SASL_PLAINTEXT
+
+ 
+
+Start consumer console:
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --zookeeper hive-spike.zalonilabs.com:2181 --topic testtopic --from-beginning --security-protocol SASL_PLAINTEXT
+
+
+You should be able to get message from producer to consumer console as shown below:
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-console-producer.sh --broker-list hive-spike.zalonilabs.com:6667 --topic testtopic --security-protocol SASL_PLAINTEXT
+
+hi
+
+hello
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-console-consumer.sh --zookeeper hive-spike.zalonilabs.com:2181 --topic testtopic --from-beginning --security-protocol SASL_PLAINTEXT
+
+{metadata.broker.list=hive-spike.zalonilabs.com:6667, request.timeout.ms=30000, client.id=console-consumer-10793, security.protocol=SASL_PLAINTEXT}
+hi
+
+hello
+
+ 
+
+ 
+
+================Authorization and ACLs============
+
+ 
+
+Kafka ships with a pluggable Authorizer and an out-of-box authorizer implementation that uses ZooKeeper to store all the ACLs. It is important to set ACLs because otherwise access to resources is limited to super users when an authorizer is configured. The default behavior is such that if a resource has no associated ACLs, then no one is allowed to access the resource, except super users. 
+
+ 
+
+
+To enable ACLs, we need to configure an authorizer. Kafka provides a simple authorizer implementation, and to use it, you can add the following to server.properties:
+
+ 
+
+authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer
+
+
+The following examples show we can use bin/kafka-acls (the Kafka Authorizer CLI) to add, remove or list ACLs. Please run bin/kafka-acls --help for detailed information on the supported options. Note that ACLs are stored in ZooKeeper and they are propagated to the brokers asynchronously so there may be a delay before the change takes effect even after the command returns.
+
+
+Adding ACLs
+
+
+Suppose you want to add an ACL “Principals User:bedrock and User:mica are allowed to perform Operation Read and Write on Topic Test-Topic from IP 198.198.1.131 and IP 198.198.1.132”. You can do that by executing the following:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --add --allow-principal User:bedrock User:mica --allow-host 192.168.1.131 --allow-host 192.168.1.132 --operation Read --operation Write --topic zaloni
+
+ 
+
+In rare cases where an ACL that allows access to all but some principal is desired, --deny-principal and --deny-host options can be used. For example, if we want to allow all users to Read from Test-topic but only deny User:BadBob from IP 192.168.1.132 we can do so using the following command:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=localhost:2181 --add --allow-principal User:* --allow-host * --deny-principal User:badmica --deny-host 192.168.1.132 --operation Read --topic Test-topic
+
+ 
+
+Note that --allow-host and deny-host only support IP addresses (hostnames are not supported)
+
+
+The examples above add ACLs to a topic by specifying --topic [topic-name] as the resource option. Similarly, one can add ACLs to a cluster by specifying --cluster and to a group by specifying --group [group-name]. In the event that you want to grant permission to all groups, you may do so by specifying --group=* as shown in the following command:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --add --allow-principal User:* --operation read --topic test --group=*
+
+ 
+
+Removing ACLs
+
+
+Removing ACLs is similar, but the --remove option should be specified instead of --add. To remove the ACLs added in the first example above we can execute the following:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --remove --allow-principal User:bedrock --allow-host 192.168.1.131 --operation Write --topic zaloni
+
+ 
+
+List ACLs
+
+ 
+
+We can list the ACLs for a given resource by specifying the --list option and the resource. For example, to list all ACLs for zaloni we can execute the following:
+
+ 
+
+[kafka@hive-spike ~]$/usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --list --topic zaloni
+
+
+Adding or Removing a Principal as Producer or Consumer
+
+ 
+
+The most common use cases for ACL management are adding/removing a principal as a producer or consumer so we added convenience options to handle these cases. In order to add User:Bob as a producer of Test-topic we can execute the following:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --add --allow-principal User:Bob --producer --topic Test-topic
+
+Similarly to add Alice as a consumer of Test-topic with group Group-1 we specify the --consumer and --group options:
+
+ 
+
+[kafka@hive-spike ~]$ /usr/hdp/current/kafka-broker/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=hive-spike.zalonilabs.com:2181 --add --allow-principal User:Bob --consumer --topic test-topic --group Group-1
+
+In order to remove a principal from a producer or consumer role we just need to specify the --remove option.
+
+ 
