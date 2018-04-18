@@ -1,0 +1,289 @@
+Cross-realm trust describes situations when clients (typically users) of one realm use Kerberos to authenticate to services (e.g. server processes) which belong to another realm. Let's say that clients in realm A want to use the services in realm B. In this case, the administrator needs to configure that realm B trusts the realm A by sharing a key between the two involved KDCs (of the two different realms). In the above example the key would have the krbtgt/B@A form and should be added to both KDCs with the same key. By default cross-realm trust is unidirectional, meaning that if you also want the users from realm B to access services in realm A, you need to add another key (krbtgt@A/B).
+
+ 
+
+Pre-requisite:
+
+ 
+
+1)Assuming you have setup up a MIT Kerberos environment in the cluster and have credentials or info of the users on the AD Server
+
+ 
+
+We are using MIT realm as CLOUDERA.MIT for kerberosing cluster and active directory realm as ZALONILABS.COM for users mapping.
+
+ 
+
+Configuration on all nodes in the cluster
+
+ 
+
+Verify the kerberos /etc/krb5.conf. This should contain both realms on all the cluster nodes. The default realm and the domain realm should remain set as the MIT Kerberos realm which is local to the cluster.
+
+ 
+
+ 
+
+[logging]
+default = FILE:/var/log/krb5libs.log
+kdc = FILE:/var/log/krb5kdc.log
+admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+default_realm = CLOUDERA.MIT
+dns_lookup_realm = false
+dns_lookup_kdc = false
+ticket_lifetime = 24h
+renew_lifetime = 7d
+forwardable = true
+
+ 
+
+[realms]
+CLOUDERA.MIT = {
+kdc = quickstart.cloudera
+admin_server = quickstart.cloudera
+max_renewable_life = 7d 0h 0m 0s
+default_principal_flags = +renewable
+}
+ZALONILABS.COM = {
+admin_server = 192.168.1.194
+kdc = 192.168.1.194
+}
+
+
+[domain_realm]
+.cloudera.mit = CLOUDERA.MIT
+cloudera.mit = CLOUDERA.MIT
+.zalonilabs.com = ZALONILABS.COM
+zalonilabs.com = ZALONILABS.COM
+
+ 
+
+[capaths]
+ZALONILABS.COM = {
+
+CLOUDERA = .
+
+}
+
+ 
+
+Configuration on the Active Directory
+
+ 
+
+First, we need to configure network security and enable network encryption for Kerberos in the active or default local domain policy. Secure connections from Windows through HiveServer that use BI tools and ODBC require this domain policy.
+
+In the Active Directory console, go to:
+Server Manager > Group Policy Management > Domain > Group Policy Objects > Default or Active Domain Policy and Edit
+
+ 
+
+
+Then Navigate to Computer Configuration > Policies > Windows Settings > Security Settings > Local Policies > Security Options and configure Network security: Configure Encryption types allowed for Kerberos.
+
+ 
+
+
+
+ 
+
+(Better to chose every encryption, but you can limit to what you want to enable.)
+
+ 
+
+ 
+
+We had a Windows 2012 Active Directory server installed. Domain Name = ZALONILABS.COM. Run these commands in PowerShell to configure Windows Kerberos with realms in Linux.
+
+ 
+
+1) Use ksetup to set up and maintaining Kerberos protocol and the Key Distribution Center (KDC) to support Kerberos realms, which are not also Windows domains. Using the following ksetup command will configure your computer to recognize the CLOUDERA.MIT realm:
+
+ 
+
+ksetup /addkdc YOUR-LOCAL-REALM-COMPANY.COM kdc-server-hostname.cluster.corp.company.com
+
+ 
+
+In our case this command looks like:
+
+ 
+
+ksetup /addkdc CLOUDERA.MIT quickstart.cloudera
+
+ 
+
+2) Use netdom to manage trust between domains
+
+ 
+
+netdom trust YOUR-LOCAL-REALM.COMPANY.COM /Domain:AD-REALM.COMPANY.COM /add /realm /passwordt:
+
+ 
+
+In our case:
+
+ 
+
+netdom trust CLOUDERA.MIT /Domain: ZALONILABS.COM /add /realm /passwordt:zaloni.1234
+
+
+NOTE: Yes, it is passwordt. This specifies a new trust password. This parameter is valid only if you specify the /add parameter, and only if one of the domains that you specify is a non-Windows, Kerberos realm. You set the trust password on the Windows domain only, which means that you do not need credentials for the non-Windows domain.
+
+
+3) Set the proper encryption type
+
+ 
+
+ksetup /SetEncTypeAttr YOUR-LOCAL-REALM.COMPANY.COM
+
+ 
+
+This command looks like:
+
+ 
+
+ksetup /SetEncTypeAttr CLOUDERA.MIT DES-CBC-CRC DES-CBC-MD5 RC4-HMAC-MD5 AES128-CTS-HMAC-SHA1-96 AES256-CTS-HMAC-SHA1-96
+
+
+Configuration on the MIT Kerberos server
+
+ 
+
+Add a cross-realm krbtgt principal to the Kerberos KDC. Run the command in kadmin.local console to add the principal and available encryption.
+
+ 
+
+kadmin: addprinc -e "" krbtgt/YOUR-LOCAL-REALM.COMPANY.COM@AD-REALM.COMPANY.COM
+
+ 
+
+In our case this command looks like:
+
+ 
+
+kadmin.local
+
+
+addprinc -e "aes256-cts:normal aes128-cts:normal des3-hmac-sha1:normal arcfour-hmac:normal des-hmac-sha1:normal des-cbc-md5:normal des-cbc-crc:normal" krbtgt/CLOUDERA.MIT@ZALONILABS.COM
+
+ 
+
+Use the same password you used in the netdom command on the Active Directory Server.
+
+
+Go back to Cloudera Manager/Ambari and map users from AD domain to have access in Cluster by adding the line shown below into hadoop.security.auth_to_local text field in under HDFS service i.e core-site.xml in Advanced section:
+
+ 
+
+<property>
+<name>hadoop.security.auth_to_local</name>
+<value>
+RULE:[1:$1@$0](.*@ZALONILABS.COM)s/@.*//
+DEFAULT
+</value>
+</property>
+
+
+Now restart the outdated components for the configuration changes to take effect.
+
+ 
+
+The recommended method for user and group mapping is to use SSSD to connect the Linux OS with AD.
+
+
+Here's the sssd script
+
+
+#!/usr/bin/environment bash
+ad_user=${ad_user:-administrator} ## this is your admin user
+ad_domain=${ad_domain:-zalonilabs.com}
+ad_dc=${ad_dc:-192.168.1.194}
+ad_root="${ad_root:-dc=zalonilabs,dc=com}"
+ad_ou="${ad_ou:-ou=du1,${ad_root}}"
+ad_realm="${ad_realm:-ZALONILABS.COM}"
+
+## You shouldn’t need to change anything below this
+
+sudo yum makecache fast
+sudo yum -y -q install epel-release ## epel is required for adcli
+sudo yum -y -q install sssd oddjob-mkhomedir authconfig sssd-krb5 sssd-ad sssd-tools libnss-sss libpam-sss openldap-clients
+sudo yum -y -q install adcli
+
+## LDAP configuration to use the systems PKI and a default LDAP server
+sudo tee /etc/openldap/ldap.conf > /dev/null << EOF
+URI ldap://${ad_dc}
+BASE ${ad_root}
+TLS_CACERTDIR /etc/pki/tls/certs
+TLS_CACERT /etc/pki/tls/cert.pem
+SASL_MECH GSSAPI
+SASL_NOCANON on
+
+EOF
+
+## Prompt for AD password
+if [ -z ${ad_pass+x} ]; then 
+read -s -p "Password of ${ad_user}@${ad_realm}: " ad_pass
+echo
+fi
+
+
+echo ${ad_pass} | sudo kinit ${ad_user}
+
+## used adcli as it was simpler, but samba4 could work instead with some extra configuration:
+# sudo net ads join -k -S ${ad_dc} -w hortonworks.com createcomputer="labs/lab01" -d 9
+
+sudo adcli join -v \
+--domain-controller=${ad_dc} \
+--domain-ou="${ad_ou}" \
+--login-ccache="/tmp/krb5cc_0" \
+--login-user="${ad_user}" \
+-v \
+--show-details
+
+## pam, ssh, autofs should be disabled on master & data nodes
+## - we only need nss on those nodes
+## - edge nodes need the ability to login
+sudo tee /etc/sssd/sssd.conf > /dev/null <<EOF
+[sssd]
+## master & data nodes only require nss. Edge nodes require pam.
+services = nss, pam, ssh, autofs, pac
+config_file_version = 2
+domains = ${ad_realm}
+override_space = _
+[domain/${ad_realm}]
+id_provider = ad
+auth_provider = ad
+chpass_provider = ad
+#access_provider = ad
+ad_server = ${ad_dc}
+ldap_id_mapping = true
+debug_level = 9
+enumerate = true
+#ldap_schema = ad
+#cache_credentials = true
+#ldap_group_nesting_level = 5
+ldap_tls_cacertdir = /etc/pki/tls/certs
+ldap_tls_cacert = /etc/pki/tls/certs/ca-bundle.crt
+ldap_tls_reqcert = never
+[nss]
+override_shell = /bin/bash
+override_homedir = /home/%u
+EOF
+sudo chmod 0600 /etc/sssd/sssd.conf
+
+sudo authconfig --enablesssd --enablesssdauth --enablemkhomedir --enablelocauthorize --update
+
+sudo chkconfig oddjobd on
+sudo service oddjobd restart
+sudo chkconfig sssd on
+sudo service sssd restart
+
+sudo kdestroy
+
+ 
+
+ 
+
