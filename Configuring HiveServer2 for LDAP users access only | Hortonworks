@@ -1,0 +1,11 @@
+Following the below instructions to configure HiveServer2 so that only LDAP users gets access to hive via beeline:
+
+Log in to Ambari.
+Click on Hive service.
+Navigate to Configs page for Hive service.
+SET the property HiveServer2 Authentication as "LDAP/AD" in the Security Settings Category.
+Navigate to the Advanced section of Hive Configs Page.
+In advanced hive-site.xml SET "hive.server2.authentication.ldap.url" to the accessible LDAP URL. Eg: ldap://<ldap_host>:<port>
+Save the Changes.
+RESTART Hive Service.
+After performing the above steps only LDAP users will be allowed to access hive via beeline.
