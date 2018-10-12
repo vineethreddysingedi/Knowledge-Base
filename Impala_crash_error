@@ -1,0 +1,29 @@
+TSB 2018-275: Impala crashes or returns incorrect results on Xeon Skylake-SP processors with AVX-512 support
+Labels:
+
+Summary
+A third-party library used by Impala has various bugs with its AVX-512 support that cause incorrect results or crashes when running Impala queries with codegen enabled.
+Symptoms
+Intel recently released Xeon server-class processors that support the AVX-512 instruction set extensions. A third-party library used by Impala has various bugs with its AVX-512 support that cause incorrect results or crashes when running Impala queries with codegen enabled.
+
+Impact: Incorrect results or Impala daemon crashes.
+Users affected: All Impala users with the affected hardware.
+Applies To
+CDH 5.8.0, 5.8.2, 5.8.3, 5.8.4, 5.8.5
+CDH 5.9.0, 5.9.1, 5.9.2, 5.9.3
+CDH 5.10.0, 5.10.1, 5.10.2
+CDH 5.11.0, 5.11.1, 5.11.2
+CDH 5.12.0, 5.12.1, 5.12.2
+CDH 5.13.0, 5.13.1
+Instructions
+To obtain the fix, upgrade to CDH 5.14.0 or higher.
+
+To determine if your CPU is affected, run "cat /proc/cpuinfo" on the system and inspect the "flags" field. If any flags starting with avx512* are listed, your system is affected.
+
+For example, C5 and M5 instance families in AWS EC2 are affected.
+
+If you plan to run Impala on hardware with an affected processor, two remediations are possible:
+
+Upgrade to CDH5.14.0 and higher with the fix for IMPALA-6291.
+If Impala is running under virtualization and your virtualization software can disable instruction set extensions via CPUID, disable any extensions starting with “avx512” on the guest VM.
+It is possible to work around the issue by setting the query option disable_codegen=true for all queries, but this comes at a significant performance penalty.
