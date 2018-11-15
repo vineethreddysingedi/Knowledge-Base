@@ -1,0 +1,29 @@
+--- 
+- hosts: all
+  sudo: yes 
+  tasks: 
+  - name: Ansible regexp replace example
+    replace: 
+      dest: "{{ item.dest }}"
+      regexp: "{{ item.regexp1 }}"
+      replace: "{{ item.replace }}"
+      backup: yes
+    with_items:
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/sqoop2/tomcat-conf.mr1/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/sqoop2/tomcat-conf.dist/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/hadoop-kms/tomcat-conf.http/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/hadoop-kms/tomcat-conf.https/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/solr/tomcat-conf.https/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/solr/tomcat-conf.dist/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.https.mr1/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.https.mr1/conf/ssl/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.http.mr1/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.http.mr1/conf/ssl/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.http/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.http/conf/ssl/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.https/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/oozie/tomcat-conf.https/conf/ssl/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/hadoop-httpfs/tomcat-conf.https/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/etc/hadoop-httpfs/tomcat-conf.dist/conf/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+      - { dest: /opt/cloudera/parcels/CDH-5.15.1-1.cdh5.15.1.p0.4/lib/bigtop-tomcat/conf.template/server.xml, regexp1: (autoDeploy="true".*) , replace: autoDeploy="false"}
+   
