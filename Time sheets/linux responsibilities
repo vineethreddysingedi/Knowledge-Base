@@ -1,0 +1,58 @@
+Objective
+
+To secure a challenging position that utilizes my years of experience and to use my skills in the best possible way for achieving the company’s goals, while allowing me the opportunity to grow professionally.
+
+Profile Summary
+
+Working as a System Administrator with Linux background and 3+ years of experience in IT industry, includes production Data Center, Server’s hardware support & Automation process. 
+Strength includes self-confidence, excellent communication skills & customer service, resourceful problem solving, eagerness to learn new technology and commitment towards team success.  
+
+Work Experience
+ 
+Tata Consultancy Services – System Administrator
+TCS – Banglore
+
+	Working in HANA Cloud Technologies with various customized tools
+	Manage & Monitoring Production Environment server’s using various tools
+	Analyzing and solving technical issues as per SLA.
+	Managing shifts with lesser escalation. 
+	Training up new colleagues & keep them with updated process.
+	Working on tickets with SLA (Incident Management, Change & Service Requests)
+	Responding Server alerts in a timely fashion, as per defined priority level.
+	Adhering ITIL process for all tickets
+
+Project Details
+
+Project Name     	              : SAP MCD 
+Platform 	 	              : SUSE Linux and SAP Basis.
+Cloud Platform                 	: SAP internal R3 cloud 
+Monitoring Tool		: Technical infrastructure controller [TIC] which works on Nagios & joshyd.
+H/W Monitoring Tool      	: SPECTRUM
+Inventories Used               	: SISM [SAP inhouse system manager], SPC CLD
+Ticketing tool              	               : SPC [Service provider cockpit]
+Other tools                                      : Pass vault, BCP [Customer support system], CAM[Used to raise the access].
+
+	Deploying the new servers both virtual machine [XEN hypervisors] as well as physical servers
+	Decommissioning the servers
+	Tasks performed on the virtual machines - Resize, OS patching, OS upgrade, migration
+	We perform data transform activities to the client servers both data export and data import.
+	Creating & Administering User/Group Accounts
+	We work on fixing alerts such as Host downs, fixing out space issue on the block device such as Rootfs, Tmpfs, varfs alerts.
+	We work on ping issue, SSH issue, NFS extension on the client servers.
+	We speculate the hardware issues using the hardware console and assist the data center admins to fix the issue coordination with the application and DB team.
+	We work on the synching the backup servers with our client servers to have the smooth backup.
+	We perform the security health check of the server using CRT tool and achieved 100% compliance servers.
+	We work on the reboot, power on and power from console and OS levels
+	We handled the bridge calls to co-ordinate with the other teams to fix the SM related critical issues.
+
+
+Certification
+RHCSA
+
+Education
+
+MCA	Sastra University - SRC	2013 - 2015
+BCA	Sastra University - SRC	2010 - 2013
+XII	Arul Matriculation	2010
+	Shanmuga Arts Science Technology and Research Academy
+
